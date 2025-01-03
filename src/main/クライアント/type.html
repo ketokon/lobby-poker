@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Client Example</title>
+</head>
+<body>
+<h2>WebSocket Client Example</h2>
+
+<!-- 接続先のURLを指定する入力欄 -->
+<label for="ws-url">WebSocket URL:</label>
+<input type="text" id="ws-url" value="ws://localhost:8080/LobbyServer" size="50"/><br><br>
+
+<!-- 接続ボタン・切断ボタン -->
+<button id="connect-btn">Connect</button>
+<button id="disconnect-btn" disabled>Disconnect</button>
+<div id="status" style="margin:8px 0;"></div>
+
+<hr/>
+
+<!-- ユーザ名・パスワード入力欄 -->
+<h3>Register / Login / Logout</h3>
+<label for="username">Username:</label>
+<input type="text" id="username" /><br/>
+<label for="password">Password:</label>
+<input type="password" id="password" /><br/>
+
+<!-- ログイン・登録 ボタン + ログアウトボタン -->
+<button id="register-btn" disabled>Register</button>
+<button id="login-btn" disabled>Login</button>
+<button id="logout-btn" disabled>Logout</button>
+
+<hr/>
+
+<!-- ログ表示用の領域 -->
+<div id="log" style="
+       border: 1px solid #ccc;
+       padding: 10px;
+       margin-top: 10px;
+       height: 200px;
+       overflow: auto;">
+</div>
+
+<script>
+    let ws = null;
+
+    const statusDiv = document.getElementById('status');
+    const logDiv = document.getElementById('log');
+    const connectBtn = document.getElementById('connect-btn');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const wsUrlInput = document.getElementById('ws-url');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+
+    // ログ出力用の関数
+    function log(message) {
+      const newLine = document.createElement('div');
+      newLine.textContent = message;
+      logDiv.appendChild(newLine);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // 「Connect」ボタン押下時
+    connectBtn.addEventListener('click', () => {
+      const url = wsUrlInput.value;
+      ws = new WebSocket(url);
+
+      // 接続成功時
+      ws.onopen = () => {
+        log('Connected to ' + url);
+        statusDiv.textContent = 'Connected';
+        disconnectBtn.disabled = false;
+        connectBtn.disabled = true;
+        registerBtn.disabled = false;
+        loginBtn.disabled = false;
+        logoutBtn.disabled = false;
+      };
+
+      // サーバからメッセージを受信した時
+      ws.onmessage = (evt) => {
+        log('Received: ' + evt.data);
+
+        try {
+          // JSONとして解析
+          const data = JSON.parse(evt.data);
+
+          if (data.status === 'success') {
+            log('Success: ' + data.message);
+
+            // もし "redirect" フィールドが含まれていれば、画面遷移
+            if (data.redirect) {
+              window.location.href = data.redirect;
+            }
+          } else if (data.status === 'error') {
+            log('Error: ' + data.message);
+          } else {
+            log('Unknown response: ' + evt.data);
+          }
+        } catch (e) {
+          // JSON形式でなければそのまま表示
+          log('Raw message: ' + evt.data);
+        }
+      };
+
+      // エラー発生時
+      ws.onerror = (err) => {
+        log('WebSocket Error: ' + err);
+      };
+
+      // 接続が閉じられた時
+      ws.onclose = () => {
+        log('Disconnected from ' + url);
+        statusDiv.textContent = 'Disconnected';
+        disconnectBtn.disabled = true;
+        connectBtn.disabled = false;
+        registerBtn.disabled = true;
+        loginBtn.disabled = true;
+        logoutBtn.disabled = true;
+      };
+    });
+
+    // 「Disconnect」ボタン押下時
+    disconnectBtn.addEventListener('click', () => {
+      if (ws) {
+        ws.close();
+      }
+    });
+
+    // 「Register」ボタン押下時
+    registerBtn.addEventListener('click', () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        log('WebSocket is not connected');
+        return;
+      }
+      const msg = {
+        action: 'register',
+        username: usernameInput.value,
+        password: passwordInput.value
+      };
+      ws.send(JSON.stringify(msg));
+      log('Sent: ' + JSON.stringify(msg));
+    });
+
+    // 「Login」ボタン押下時
+    loginBtn.addEventListener('click', () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        log('WebSocket is not connected');
+        return;
+      }
+      const msg = {
+        action: 'login',
+        username: usernameInput.value,
+        password: passwordInput.value
+      };
+      ws.send(JSON.stringify(msg));
+      log('Sent: ' + JSON.stringify(msg));
+    });
+
+    // 「Logout」ボタン押下時
+    logoutBtn.addEventListener('click', () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        log('WebSocket is not connected');
+        return;
+      }
+      const msg = {
+        action: 'logout',
+        username: usernameInput.value
+      };
+      ws.send(JSON.stringify(msg));
+      log('Sent: ' + JSON.stringify(msg));
+    });
+</script>
+</body>
+</html>

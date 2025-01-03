@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Client Example</title>
+</head>
+<body>
+<h2>Login Test</h2>
+
+<div>
+  Username: <input type="text" id="username"><br/>
+  Password: <input type="password" id="password"><br/>
+  <button id="loginBtn">Login</button>
+
+  <!-- 追加: ログアウトボタン -->
+  <button id="logoutBtn">Logout</button>
+</div>
+
+<div id="log" style="border:1px solid #ccc; margin-top:10px; padding:10px;"></div>
+
+<script>
+    const logDiv = document.getElementById('log');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn'); // 追加
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+
+    // WebSocket接続 (サンプル上は固定URL)
+    const ws = new WebSocket('ws://localhost:8080/LobbyServer');
+
+    // ログ表示用関数
+    function addLog(msg) {
+      const div = document.createElement('div');
+      div.textContent = msg;
+      logDiv.appendChild(div);
+    }
+
+    // WebSocket が接続したとき
+    ws.onopen = () => {
+      addLog('WebSocket connected');
+    };
+
+    // WebSocket がメッセージを受信したとき
+    ws.onmessage = (evt) => {
+      addLog('Received: ' + evt.data);
+      try {
+        const data = JSON.parse(evt.data);
+        if (data.status === 'success') {
+          addLog('Success: ' + data.message);
+
+          // もし "redirect" が含まれていれば画面遷移
+          if (data.redirect) {
+            window.location.href = data.redirect;
+          }
+        } else if (data.status === 'error') {
+          addLog('Error: ' + data.message);
+        } else {
+          addLog('Unknown response: ' + evt.data);
+        }
+      } catch (e) {
+        // JSONでなければそのまま表示
+        addLog('Error parsing JSON: ' + e);
+      }
+    };
+
+    // エラー時
+    ws.onerror = (err) => {
+      addLog('WebSocket error: ' + err);
+    };
+
+    // 「Login」ボタン押下時
+    loginBtn.addEventListener('click', () => {
+      const username = usernameInput.value;
+      const password = passwordInput.value;
+
+      const msg = {
+        action: 'login',
+        username: username,
+        password: password
+      };
+      ws.send(JSON.stringify(msg));
+      addLog('Sent: ' + JSON.stringify(msg));
+    });
+
+    // 「Logout」ボタン押下時（追加）
+    logoutBtn.addEventListener('click', () => {
+      const username = usernameInput.value; // 入力欄のユーザ名を利用
+      const msg = {
+        action: 'logout',
+        username: username
+      };
+      ws.send(JSON.stringify(msg));
+      addLog('Sent: ' + JSON.stringify(msg));
+    });
+</script>
+</body>
+</html>
