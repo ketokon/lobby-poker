@@ -64,6 +64,19 @@ public class LobbyController {
                 }
                 break;
             }
+            case "checkStats": { // 戦績確認の新しいアクション
+                String userName = json.get("username").asText();
+                Map<String, Integer> stats = accountService.getStats(userName);
+                if (stats != null) {
+                    result.put("status", "success");
+                    result.put("message", "Stats fetched successfully");
+                    result.put("stats", stats);
+                } else {
+                    result.put("status", "error");
+                    result.put("message", accountService.getErrorMessage());
+                }
+                break;
+            }
             default:
                 result.put("status", "error");
                 result.put("message", "Unknown action");

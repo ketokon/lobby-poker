@@ -2,6 +2,8 @@ package LobbyServer;
 
 import LobbyServer.Entity.User;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -66,6 +68,25 @@ public class LobbyCommunication {
             }
         }
     }
+
+    public static Map<String, Integer> getUserStats(String userName) throws SQLException {
+        Map<String, Integer> stats = new HashMap<>();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String sql = "SELECT count1st, count2nd, count3rd, count4th FROM User WHERE username = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, userName);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    stats.put("count1st", rs.getInt("count1st"));
+                    stats.put("count2nd", rs.getInt("count2nd"));
+                    stats.put("count3rd", rs.getInt("count3rd"));
+                    stats.put("count4th", rs.getInt("count4th"));
+                }
+            }
+        }
+        return stats;
+    }
+
 
     // もしアプリケーションサーバへ sendApplicationServer(...) のような通信が必要なら追加
 }

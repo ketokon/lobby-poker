@@ -35,6 +35,13 @@ public class WebsocketServer {
                 // それ以外 → MatchService等
                 result = lobbyController.callMatchService(json);
             }
+
+            if ("checkStats".equals(action)) {
+                result = lobbyController.callAccountService(json);
+            } else {
+                result = Map.of("status", "error", "message", "Unknown action");
+            }
+
             // 結果をクライアントへ送信
             sendJson(session, result);
 

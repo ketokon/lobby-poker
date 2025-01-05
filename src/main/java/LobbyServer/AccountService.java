@@ -3,6 +3,7 @@ package LobbyServer;
 import LobbyServer.Entity.User;
 import LobbyServer.LobbyCommunication; // 後述
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * アカウント関連(ログイン/ログアウト/登録など)のビジネスロジック
@@ -75,6 +76,18 @@ public class AccountService {
             return false;
         }
     }
+
+    public Map<String, Integer> getStats(String userName) {
+        try {
+            // `LobbyCommunication`を使ってデータベースから戦績を取得
+            return LobbyCommunication.getUserStats(userName);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            errorMessage = "Database error: " + e.getMessage();
+            return null;
+        }
+    }
+
 
     public String getErrorMessage() {
         return errorMessage;

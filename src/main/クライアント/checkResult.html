@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戦績確認</title>
+    <style>
+        table {
+            width: 50%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+<h1 style="text-align: center;">戦績確認</h1>
+<div style="text-align: center;">
+    <label for="username">ユーザー名: </label>
+    <input type="text" id="username" placeholder="ユーザー名を入力">
+    <button onclick="checkStats()">戦績を確認</button>
+</div>
+<div id="statsResult" style="text-align: center; margin-top: 20px;"></div>
+
+<script>
+        const socket = new WebSocket("ws://localhost:8080/lobby");
+
+        socket.onopen = () => console.log("WebSocket 接続が確立しました。");
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const resultDiv = document.getElementById("statsResult");
+
+            if (data.status === "success") {
+                const stats = data.stats;
+                resultDiv.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>順位</th>
+                                <th>回数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1位</td><td>${stats.count1st}</td></tr>
+                            <tr><td>2位</td><td>${stats.count2nd}</td></tr>
+                            <tr><td>3位</td><td>${stats.count3rd}</td></tr>
+                            <tr><td>4位</td><td>${stats.count4th}</td></tr>
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                resultDiv.innerHTML = `<p style="color: red;">${data.message}</p>`;
+            }
+        };
+
+        function checkStats() {
+            const username = document.getElementById("username").value;
+            if (!username) {
+                alert("ユーザー名を入力してください。");
+                return;
+            }
+
+            const message = JSON.stringify({ action: "checkStats", username: username });
+            socket.send(message);
+        }
+    </script>
+</body>
+</html>
