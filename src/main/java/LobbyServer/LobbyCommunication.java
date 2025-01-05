@@ -13,13 +13,13 @@ public class LobbyCommunication {
     // findUserByName
     public static User findUserByName(String userName) throws SQLException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            String sql = "SELECT id, username, password, loginState FROM User WHERE username = ?";
+            String sql = "SELECT Userid, username, password, loginState FROM User WHERE username = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, userName);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     User user = new User();
-                    user.setUserID(rs.getInt("id"));
+                    user.setUserID(rs.getInt("Userid"));
                     user.setUserName(rs.getString("username"));
                     user.setUserPass(rs.getString("password"));
                     user.setLoginState(rs.getInt("loginState"));
