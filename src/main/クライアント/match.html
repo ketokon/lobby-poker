@@ -10,23 +10,22 @@
             text-align: center;
             margin-top: 50px;
         }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
         #status {
             margin-top: 20px;
             font-size: 18px;
-            color: blue;
         }
     </style>
 </head>
 <body>
 <h1>マッチングシステム</h1>
 <form id="matchForm">
-  <label for="userId">ユーザーID:</label>
-  <input type="text" id="userId" name="userId" required><br><br>
-  <label for="userName">ユーザー名:</label>
-  <input type="text" id="userName" name="userName" required><br><br>
-  <label for="userPass">パスワード:</label>
-  <input type="password" id="userPass" name="userPass" required><br><br>
-  <button type="button" onclick="startMatch()">マッチ開始</button>
+  <input type="text" id="userName" placeholder="ユーザー名" required>
+  <button type="button" onclick="startMatching()">マッチ開始</button>
 </form>
 <div id="status"></div>
 
@@ -34,38 +33,30 @@
         const socket = new WebSocket("ws://localhost:8080/lobby");
 
         socket.onopen = () => console.log("WebSocket 接続が確立しました。");
-
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             const statusDiv = document.getElementById("status");
 
             if (data.status === "success") {
-                statusDiv.textContent = "マッチングが完了しました！";
-                statusDiv.style.color = "green";
+                statusDiv.innerHTML = `<p>マッチング完了: ${JSON.stringify(data.users)}</p>`;
             } else if (data.status === "waiting") {
                 statusDiv.textContent = data.message;
-                statusDiv.style.color = "blue";
             } else {
                 statusDiv.textContent = data.message;
-                statusDiv.style.color = "red";
             }
         };
 
-        function startMatch() {
-            const userId = document.getElementById("userId").value;
+        function startMatching() {
             const userName = document.getElementById("userName").value;
-            const userPass = document.getElementById("userPass").value;
 
-            if (!userId || !userName || !userPass) {
-                alert("すべてのフィールドを入力してください！");
+            if (!userName) {
+                alert("ユーザー名を入力してください。");
                 return;
             }
 
             const message = JSON.stringify({
-                action: "startMatch",
-                userId: userId,
-                userName: userName,
-                userPass: userPass
+                action: "startMatching",
+                username: userName
             });
 
             socket.send(message);

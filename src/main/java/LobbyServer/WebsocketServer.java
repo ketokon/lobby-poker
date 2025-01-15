@@ -28,16 +28,11 @@ public class WebsocketServer {
             String action = json.get("action").asText();
 
             Map<String, Object> result;
-            if ("register".equals(action) || "login".equals(action) || "logout".equals(action)) {
+            if ("register".equals(action) || "login".equals(action) || "logout".equals(action) || "checkStats".equals(action)) {
                 // アカウント系アクション
                 result = lobbyController.callAccountService(json);
-            } else {
-                // それ以外 → MatchService等
+            } else if ("startMatching".equals(action)) {
                 result = lobbyController.callMatchService(json);
-            }
-
-            if ("checkStats".equals(action)) {
-                result = lobbyController.callAccountService(json);
             } else {
                 result = Map.of("status", "error", "message", "Unknown action");
             }
